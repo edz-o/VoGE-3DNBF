@@ -163,6 +163,11 @@ class GaussianRenderer(nn.Module):
                 sel_dsd=sel_dsd,
                 occupation_weight=self.render_settings['absorptivity'])
 
+        # N = verts.shape[0]
+        # P = verts.shape[1]
+        # for i in range(N):
+        #     vert_index[i] = torch.clamp(vert_index[i] - i*P, min=-1)
+
         return Fragments(vert_weight=vert_weight, vert_index=vert_index, valid_num=valid_num, vert_hit_length=vert_hit_length)
 
 

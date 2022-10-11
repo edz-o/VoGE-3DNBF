@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import math
 from VoGE.Utils import ind_sel, ind_fill
 import ipdb
-
+import numpy as np
 
 def inverse_cumsum(x, dim):
     return x + torch.sum(x, dim=dim, keepdim=True) - torch.cumsum(x, dim=dim)
@@ -117,9 +117,13 @@ def merge_final(vert_attr: torch.Tensor, weight: torch.Tensor, vert_assign: torc
     :param valid_num: [b(optional), w, h, ]
     :return:
     """
-    vert_attr = vert_attr[0]
-    vert_assign = vert_assign[0].unsqueeze(0)
-    assert vert_attr.shape[0] > vert_assign.max()
+    if len(vert_attr.shape) == 3:
+        vert_attr = vert_attr.reshape(-1,3)
+    elif vert_attr.shape[0] <= vert_assign.max() and len(weight.shape) == 4:
+        vert_attr = vert_attr.repeat(weight.shape[0],1)
+
+    assert vert_attr.shape[0] > vert_assign.max() 
+
     with torch.no_grad():
         target_dim = len(valid_num.shape)
 
@@ -129,6 +133,10 @@ def merge_final(vert_attr: torch.Tensor, weight: torch.Tensor, vert_assign: torc
 
         # first num filled with 1, later 0. => [1, ] * valid_num + [0, ] * (M - valid_num)
         mask = inverse_cumsum(mask, dim=target_dim)[..., 1:]
+
+        # for i in range(40):
+        #     mask_ = F.interpolate(mask[...,i].unsqueeze(0), (56, 56)).squeeze(0)
+        #     np.savetxt('visual/mask'+str(i)+'.txt',mask_[5].cpu().detach().numpy(),fmt='%d',delimiter=' ')
 
         vert_assign += (vert_assign < 0) * 1
 
