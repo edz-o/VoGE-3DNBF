@@ -40,7 +40,13 @@ def ind_fill(target: torch.Tensor, ind: torch.Tensor, src: [torch.Tensor, float,
     :return: sel_target [... (k), M, ...]
     """
     assert len(ind.shape) > dim, "Index must have the target dim, but get dim: %d, ind shape: %s" % (dim, str(ind.shape))
-
+    append_dim = False
+    if ind.min() == -1:
+        append_dim = True
+        ind = ind + 1
+        target_prepend = torch.zeros_like(target[..., :1])
+        target = torch.cat((target_prepend, target), dim=-1)
+    # import ipdb; ipdb.set_trace()
     target = target.expand(*tuple([ind.shape[k] if target.shape[k] == 1 else -1 for k in range(dim)] + [-1, ] * (len(target.shape) - dim)))
 
     ind_pad = ind
@@ -51,7 +57,10 @@ def ind_fill(target: torch.Tensor, ind: torch.Tensor, src: [torch.Tensor, float,
         ind_pad = ind_pad.expand(*(-1, ) * (dim + 1), *target.shape[(dim + 1)::])
 
     if isinstance(src, torch.Tensor):
-        return target.scatter(dim=dim, index=ind_pad, src=src)
+        if append_dim:
+            return target.scatter(dim=dim, index=ind_pad, src=src)[:,:,1:]
+        else:
+            return target.scatter(dim=dim, index=ind_pad, src=src)
     else:
         return target.scatter(dim=dim, index=ind_pad, value=src)
 
