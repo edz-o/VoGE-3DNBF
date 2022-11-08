@@ -118,12 +118,11 @@ def merge_final(vert_attr: torch.Tensor, weight: torch.Tensor, vert_assign: torc
     :return:
     """
     if len(vert_attr.shape) == 3:
-        vert_attr = vert_attr.reshape(-1,3)
+        vert_attr = vert_attr.reshape(-1,vert_attr.shape[-1])
     elif vert_attr.shape[0] <= vert_assign.max() and len(weight.shape) == 4:
         vert_attr = vert_attr.repeat(weight.shape[0],1)
-
     assert vert_attr.shape[0] > vert_assign.max() 
-
+    
     with torch.no_grad():
         target_dim = len(valid_num.shape)
 
